@@ -6,7 +6,6 @@ import razorpay from "razorpay";
 import { userMessages } from "../messages/userMessages.js";
 import utils from "../../common/utils.js";
 import userService from "../service/userService.js";
-import res from "express/lib/response.js";
 
 const {
   USERPRESENT,
@@ -14,12 +13,22 @@ const {
   LOGINFAILURE,
   UNAUTHORIZED,
   USERUPDATEDSUCCESS,
+  SLOTNOTAVAILABLE,
+  DOCTORNOTAVAILABLE,
+  APPOINTMENTBOOKED,
+  NOTAUTHENTICATED,
+  APPOINTMENTCANCELLED,
 } = userMessages;
 const {
   findUserService,
   signupUserService,
   getUserDataService,
   updateProfileService,
+  getDoctorDataService,
+  getAppointmentsForUserService,
+  getAppointmentDetailsService,
+  cancelAppointmentService,
+  updateSlotsForDoctorService,
 } = userService;
 const { hashPassword, verifyPassword, generateJwtToken, uploadFromBuffer } =
   utils;
@@ -122,24 +131,19 @@ const updateProfile = async (userId, body, file) => {
   }
 };
 
-// check if doctor is available
-// if  yes then check for free slots
-// if slot avaliable then add patient to the slot
-// 
-
 const bookAppointment = async (userId, docId, slotDate, slotTime) => {
   try {
-    const docData = await doctorModel.findById(docId).select("-password");
+    const docData = await getDoctorDataService(docId);
 
     if (!docData.available) {
-      return res.json({ success: false, message: "Doctor Not Available" });
+      throw DOCTORNOTAVAILABLE;
     }
 
     let slots_booked = docData.slots_booked;
 
     if (slots_booked[slotDate]) {
       if (slots_booked[slotDate].includes(slotTime)) {
-        return res.json({ success: false, message: "Slot Not Available" });
+        throw SLOTNOTAVAILABLE;
       } else {
         slots_booked[slotDate].push(slotTime);
       }
@@ -148,7 +152,7 @@ const bookAppointment = async (userId, docId, slotDate, slotTime) => {
       slots_booked[slotDate].push(slotTime);
     }
 
-    const userData = await userModel.findById(userId).select("-password");
+    const userData = await getUserDataService(userId);
 
     delete docData.slots_booked;
 
@@ -166,35 +170,28 @@ const bookAppointment = async (userId, docId, slotDate, slotTime) => {
     const newAppointment = new appointmentModel(appointmentData);
     await newAppointment.save();
 
-    // save new slots data in docData
-    await doctorModel.findByIdAndUpdate(docId, { slots_booked });
+    await updateSlotsForDoctorService(docId, slots_booked);
 
-    res.json({ success: true, message: "Appointment Booked" });
+    return APPOINTMENTBOOKED;
   } catch (error) {
     console.log(error);
-    res.json({ success: false, message: error.message });
+    throw error;
   }
 };
 
-// API to cancel appointment
-const cancelAppointment = async (req, res) => {
+const cancelAppointment = async (userId, appointmentId) => {
   try {
-    const { userId, appointmentId } = req.body;
-    const appointmentData = await appointmentModel.findById(appointmentId);
+    const appointmentData = await getAppointmentDetailsService(appointmentId);
 
-    // verify appointment user
     if (appointmentData.userId !== userId) {
-      return res.json({ success: false, message: "Unauthorized action" });
+      throw NOTAUTHENTICATED;
     }
 
-    await appointmentModel.findByIdAndUpdate(appointmentId, {
-      cancelled: true,
-    });
+    await cancelAppointmentService(appointmentId);
 
-    // releasing doctor slot
     const { docId, slotDate, slotTime } = appointmentData;
 
-    const doctorData = await doctorModel.findById(docId);
+    const doctorData = await getDoctorDataService(docId);
 
     let slots_booked = doctorData.slots_booked;
 
@@ -202,22 +199,21 @@ const cancelAppointment = async (req, res) => {
       (e) => e !== slotTime
     );
 
-    await doctorModel.findByIdAndUpdate(docId, { slots_booked });
+    await updateSlotsForDoctorService(docId, slots_booked);
 
-    res.json({ success: true, message: "Appointment Cancelled" });
+    return APPOINTMENTCANCELLED;
   } catch (error) {
     console.log(error);
-    res.json({ success: false, message: error.message });
+    throw error;
   }
 };
 
 // API to get user appointments for frontend my-appointments page
-const listAppointment = async (req, res) => {
+const listAppointment = async (userId) => {
   try {
-    const { userId } = req.body;
-    const appointments = await appointmentModel.find({ userId });
+    const appointments = await getAppointmentsForUserService(userId);
 
-    res.json({ success: true, appointments });
+    return appointments;
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: error.message });

@@ -99,19 +99,21 @@ userRouter.post(
 
 userRouter.get(APPOINTMENTS, authenticateJwtToken, async (req, res, next) => {
   try {
-    const { userId } = req.body;
+    const { userId } = res?.locals;
     const appointments = await listAppointment(userId);
     res.status(200).json(new responseHandler(appointments));
   } catch (error) {
     next(error);
   }
 });
+
 userRouter.post(
   CANCELAPPOINTMENT,
   authenticateJwtToken,
   async (req, res, next) => {
     try {
-      const { userId, appointmentId } = req.body;
+      const { appointmentId } = req.body;
+      const { userId } = res?.locals;
       const result = await cancelAppointment(userId, appointmentId);
       res.status(200).json(new responseHandler(result));
     } catch (error) {
@@ -119,6 +121,8 @@ userRouter.post(
     }
   }
 );
+
+
 userRouter.post(
   PAYMENTRAZORPAY,
   authenticateJwtToken,

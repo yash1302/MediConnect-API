@@ -24,15 +24,15 @@ const {
   resourceCanceledSuccessfully,
 } = successMessages;
 
-export const userMessages = {
-  USERPRESENT: new messageHandler(conflict, conflictMessage),
+export const doctorMessages = {
+  DOCTORPRESENT: new messageHandler(conflict, conflictMessage),
   SIGNUPSUCCESS: new messageHandler(created, createdMessage),
   UNAUTHORIZED: new messageHandler(unauthorized, unauthorizedMessage),
   LOGINFAILURE: new messageHandler(notFound, notFoundMessage),
-  USERUPDATEDSUCCESS: new messageHandler(ok, updatedMessage),
+  DOCTORUPDATEDSUCCESS: new messageHandler(ok, updatedMessage),
   SLOTNOTAVAILABLE: new messageHandler(conflict, resourceNotAvailable("Slot")),
   DOCTORNOTAVAILABLE: new messageHandler(
-    conflict,
+    notFound,
     resourceNotAvailable("Doctor")
   ),
   APPOINTMENTBOOKED: new messageHandler(
