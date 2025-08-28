@@ -6,58 +6,87 @@ import validator from "validator";
 import { v2 as cloudinary } from "cloudinary";
 import userModel from "../models/userModel.js";
 import utils from "../../common/utils.js";
+import { adminMessages } from "../messages/adminMessages.js";
+import adminServices from "../service/adminService.js";
+import userService from "../service/userService.js";
 
-const { uploadFromBuffer } = utils;
+const { uploadFromBuffer, generateJwtToken, hashPassword } = utils;
+const {
+  UNAUTHORIZED,
+  ALREADYEXISTS,
+  DOCTORCREATEDSUCCESS,
+  APPOINTMENTCANCELLEDSUCESS,
+} = adminMessages;
+const {
+  getDoctorDataService,
+  createNewDoctorService,
+  getAllAppointmentsService,
+  getDoctorDataByIdService,
+  getAllDoctorsService,
+  getAllUsersService,
+} = adminServices;
+
+const {
+  cancelAppointmentService,
+  getAppointmentDetailsService,
+  updateSlotsForDoctorService,
+} = userService;
 
 // API for admin login
-const loginAdmin = async (req, res) => {
+const loginAdmin = async (email, password) => {
   try {
-    const { email, password } = req.body;
-
     if (
       email === process.env.ADMIN_EMAIL &&
       password === process.env.ADMIN_PASSWORD
     ) {
-      const token = jwt.sign(email + password, process.env.JWT_SECRET);
-      res.json({ success: true, token });
+      const tokenData = {
+        role: "admin",
+        email: email,
+      };
+      const token = generateJwtToken(tokenData);
+      return token;
     } else {
-      res.json({ success: false, message: "Invalid credentials" });
+      throw UNAUTHORIZED;
     }
   } catch (error) {
     console.log(error);
-    res.json({ success: false, message: error.message });
+    throw error;
   }
 };
 
-// API to get all appointments list
 const appointmentsAdmin = async (req, res) => {
   try {
-    const appointments = await appointmentModel.find({});
-    res.json({ success: true, appointments });
+    const appointments = await getAllAppointmentsService();
+    return appointments;
   } catch (error) {
     console.log(error);
-    res.json({ success: false, message: error.message });
+    throw error;
   }
 };
 
-// API for appointment cancellation
-const appointmentCancel = async (req, res) => {
+const appointmentCancel = async (appointmentId) => {
   try {
-    const { appointmentId } = req.body;
-    await appointmentModel.findByIdAndUpdate(appointmentId, {
-      cancelled: true,
-    });
+    const appointmentData = await getAppointmentDetailsService(appointmentId);
+    await cancelAppointmentService(appointmentId);
+    const { docId, slotDate, slotTime } = appointmentData;
 
-    res.json({ success: true, message: "Appointment Cancelled" });
+    const doctorData = await getDoctorDataByIdService(docId);
+    let slots_booked = doctorData.slots_booked;
+
+    slots_booked[slotDate] = slots_booked[slotDate].filter(
+      (e) => e !== slotTime
+    );
+
+    await updateSlotsForDoctorService(docId, slots_booked);
+
+    return APPOINTMENTCANCELLEDSUCESS;
   } catch (error) {
     console.log(error);
-    res.json({ success: false, message: error.message });
+    throw error;
   }
 };
 
-// API for adding Doctor
-// study about cloudinary more
-const addDoctor = async (req, res) => {
+const addDoctor = async (req) => {
   try {
     const {
       name,
@@ -72,42 +101,12 @@ const addDoctor = async (req, res) => {
     } = req.body;
     const imageFile = req.file;
 
-    // checking for all data to add doctor
-    if (
-      !name ||
-      !email ||
-      !password ||
-      !speciality ||
-      !degree ||
-      !experience ||
-      !about ||
-      !fees ||
-      !address
-    ) {
-      return res.json({ success: false, message: "Missing Details" });
+    const existingDoctor = await getDoctorDataService(email);
+    if (existingDoctor) {
+      throw ALREADYEXISTS;
     }
 
-    // validating email format
-    if (!validator.isEmail(email)) {
-      return res.json({
-        success: false,
-        message: "Please enter a valid email",
-      });
-    }
-
-    // validating strong password
-    if (password.length < 8) {
-      return res.json({
-        success: false,
-        message: "Please enter a strong password",
-      });
-    }
-
-    // hashing user password
-    const salt = await bcrypt.genSalt(10); // the more no. round the more time it will take
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    // upload image to cloudinary
+    const hashedPassword = await hashPassword(password);
     const imageUpload = await uploadFromBuffer(imageFile.buffer);
     const imageUrl = imageUpload.secure_url;
 
@@ -125,32 +124,30 @@ const addDoctor = async (req, res) => {
       date: Date.now(),
     };
 
-    const newDoctor = new doctorModel(doctorData);
-    await newDoctor.save();
-    res.json({ success: true, message: "Doctor Added" });
+    await createNewDoctorService(doctorData);
+    return DOCTORCREATEDSUCCESS;
   } catch (error) {
     console.log(error);
-    res.json({ success: false, message: error.message });
+    throw error;
   }
 };
 
-// API to get all doctors list for admin panel
-const allDoctors = async (req, res) => {
+const allDoctors = async () => {
   try {
-    const doctors = await doctorModel.find({}).select("-password");
-    res.json({ success: true, doctors });
+    const doctors = await getAllDoctorsService();
+    return doctors;
   } catch (error) {
     console.log(error);
-    res.json({ success: false, message: error.message });
+    throw error;
   }
 };
 
 // API to get dashboard data for admin panel
 const adminDashboard = async (req, res) => {
   try {
-    const doctors = await doctorModel.find({});
-    const users = await userModel.find({});
-    const appointments = await appointmentModel.find({});
+    const doctors = await getAllDoctorsService();
+    const users = await getAllUsersService();
+    const appointments = await getAllAppointmentsService();
 
     const dashData = {
       doctors: doctors.length,
@@ -159,10 +156,10 @@ const adminDashboard = async (req, res) => {
       latestAppointments: appointments.reverse(),
     };
 
-    res.json({ success: true, dashData });
+    return dashData;
   } catch (error) {
     console.log(error);
-    res.json({ success: false, message: error.message });
+    throw error;
   }
 };
 

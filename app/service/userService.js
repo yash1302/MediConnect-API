@@ -1,3 +1,5 @@
+import appointmentModel from "../models/appointmentModel.js";
+import doctorModel from "../models/doctorModel.js";
 import userModel from "../models/userModel.js";
 
 const signupUserService = async (userData) => {
@@ -40,9 +42,66 @@ const updateProfileService = async (userId, userData) => {
   }
 };
 
+const getDoctorDataService = async (docId) => {
+  try {
+    const doctor = await doctorModel.findById(docId).select("-password");
+    return doctor;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
+const getAppointmentsForUserService = async (userId) => {
+  try {
+    const appointments = await appointmentModel.find({ userId });
+    return appointments;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
+const getAppointmentDetailsService = async (appointmentId) => {
+  try {
+    const appointment = await appointmentModel.findById(appointmentId);
+    return appointment;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
+const cancelAppointmentService = async (appointmentId) => {
+  try {
+    const result = await appointmentModel.findByIdAndUpdate(appointmentId, {
+      cancelled: true,
+    });
+    return result;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
+const updateSlotsForDoctorService = async (docId, slots_booked) => {
+  try {
+    const result = await doctorModel.findByIdAndUpdate(docId, { slots_booked });
+    return result;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
 export default {
   signupUserService,
   findUserService,
   getUserDataService,
   updateProfileService,
+  getDoctorDataService,
+  getAppointmentsForUserService,
+  getAppointmentDetailsService,
+  cancelAppointmentService,
+  updateSlotsForDoctorService
 };

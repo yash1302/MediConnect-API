@@ -12,20 +12,67 @@ import {
 } from "../controllers/doctorController.js";
 import authDoctor from "../../middleware/authDoctor.js";
 import { authenticateJwtToken } from "../../middleware/authUser.js";
+import { responseHandler } from "../../common/MessageHandler.js";
 const doctorRouter = express.Router();
 
 doctorRouter.post("/login", async (req, res, next) => {
   try {
-    await loginDoctor(req, res, next);
+    const { email, password } = req.body;
+    const result = await loginDoctor(email, password);
+    res.status(200).send(new responseHandler(result));
   } catch (error) {
     next(error);
   }
 });
-doctorRouter.post("/cancel-appointment", authenticateJwtToken, appointmentCancel);
-doctorRouter.get("/appointments", authenticateJwtToken, appointmentsDoctor);
+
+doctorRouter.post(
+  "/cancel-appointment",
+  authenticateJwtToken,
+  async (req, res, next) => {
+    try {
+      const { appointmentId } = req.body;
+      const { userId } = res?.locals;
+      const result = await appointmentCancel(userId, appointmentId);
+      res.status(result.statusCode || 200).json(new responseHandler(result));
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+doctorRouter.get(
+  "/appointments",
+  authenticateJwtToken,
+  async (req, res, next) => {
+    try {
+      const { userId } = res?.locals;
+      const result = await appointmentsDoctor(userId);
+      res.status(200).json(new responseHandler(result));
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 doctorRouter.get("/list", authenticateJwtToken, doctorList);
-doctorRouter.post("/change-availability", authenticateJwtToken, changeAvailablity);
-doctorRouter.post("/complete-appointment", authenticateJwtToken, appointmentComplete);
+
+doctorRouter.post(
+  "/change-availability",
+  authenticateJwtToken,
+  async (req, res, next) => {
+    try {
+      const { userId } = res?.locals;
+      const result = await changeAvailablity(userId);
+      res.status(200).send(new responseHandler(result));
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+doctorRouter.post(
+  "/complete-appointment",
+  authenticateJwtToken,
+  appointmentComplete
+);
 doctorRouter.get("/dashboard", authenticateJwtToken, doctorDashboard);
 doctorRouter.get("/profile", authenticateJwtToken, doctorProfile);
 doctorRouter.post("/update-profile", authenticateJwtToken, updateDoctorProfile);

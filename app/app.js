@@ -35,7 +35,7 @@ app.get(HEALTHCHECKAPI, (req, res) => {
 });
 
 app.use((error, req, res, next) => {
-  res.status(error.status || 500).json(error || "Something went wrong");
+  res.status(error.statusCode || 500).json(error || "Something went wrong");
 });
 
 export default app;
