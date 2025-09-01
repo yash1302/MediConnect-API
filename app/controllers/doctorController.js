@@ -9,16 +9,27 @@ import userService from "../service/userService.js";
 import doctorService from "../service/doctorService.js";
 
 const { getDoctorDataByIdService, getDoctorDataService } = adminService;
-const { DOCTORNOTAVAILABLE, LOGINFAILURE, UNAUTHORIZED, APPOINTMENTCANCELLED } =
-  doctorMessages;
+const {
+  DOCTORNOTAVAILABLE,
+  LOGINFAILURE,
+  UNAUTHORIZED,
+  APPOINTMENTCANCELLED,
+  AVAILABILITYCHANGEDSUCCESSFULLY,
+  APPOINTMENTCOMPLETED,
+  DOCTORUPDATEDSUCCESS,
+} = doctorMessages;
 const { verifyPassword, generateJwtToken } = utils;
 const {
   getAppointmentDetailsService,
   cancelAppointmentService,
   updateSlotsForDoctorService,
 } = userService;
-const { getAppointmentsForDoctorService, updateDoctorAvailabilityService } =
-  doctorService;
+const {
+  getAppointmentsForDoctorService,
+  updateDoctorAvailabilityService,
+  completeAppointmentService,
+  updateDoctorProfileService,
+} = doctorService;
 
 // API for doctor Login
 const loginDoctor = async (email, password) => {
@@ -84,22 +95,16 @@ const appointmentCancel = async (docId, appointmentId) => {
 };
 
 // API to mark appointment completed for doctor panel
-const appointmentComplete = async (req, res) => {
+const appointmentComplete = async (docId, appointmentId) => {
   try {
-    const { docId, appointmentId } = req.body;
-
-    const appointmentData = await appointmentModel.findById(appointmentId);
+    const appointmentData = await getAppointmentDetailsService(appointmentId);
     if (appointmentData && appointmentData.docId === docId) {
-      await appointmentModel.findByIdAndUpdate(appointmentId, {
-        isCompleted: true,
-      });
-      return res.json({ success: true, message: "Appointment Completed" });
+      await completeAppointmentService(appointmentId);
+      return APPOINTMENTCOMPLETED;
     }
-
-    res.json({ success: false, message: "Appointment Cancelled" });
   } catch (error) {
     console.log(error);
-    res.json({ success: false, message: error.message });
+    throw error;
   }
 };
 
@@ -114,12 +119,11 @@ const doctorList = async (req, res) => {
   }
 };
 
-// API to change doctor availablity for Admin and Doctor Panel
 const changeAvailablity = async (docId) => {
   try {
     const docData = await getDoctorDataByIdService(docId);
     await updateDoctorAvailabilityService(docId, !docData.available);
-    res.json({ success: true, message: "Availablity Changed" });
+    return AVAILABILITYCHANGEDSUCCESSFULLY;
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: error.message });
@@ -127,38 +131,32 @@ const changeAvailablity = async (docId) => {
 };
 
 // API to get doctor profile for  Doctor Panel
-const doctorProfile = async (req, res) => {
+const doctorProfile = async (docId) => {
   try {
-    const { docId } = req.body;
-    const profileData = await doctorModel.findById(docId).select("-password");
-
-    res.json({ success: true, profileData });
+    const profileData = await getDoctorDataByIdService(docId);
+    return profileData;
   } catch (error) {
     console.log(error);
-    res.json({ success: false, message: error.message });
+    throw error;
   }
 };
 
 // API to update doctor profile data from  Doctor Panel
-const updateDoctorProfile = async (req, res) => {
+const updateDoctorProfile = async (docId, fees, address, available) => {
   try {
-    const { docId, fees, address, available } = req.body;
-
-    await doctorModel.findByIdAndUpdate(docId, { fees, address, available });
-
-    res.json({ success: true, message: "Profile Updated" });
+    const profileData = { fees, address, available };
+    await updateDoctorProfileService(docId, profileData);
+    return DOCTORUPDATEDSUCCESS;
   } catch (error) {
     console.log(error);
-    res.json({ success: false, message: error.message });
+    throw error;
   }
 };
 
 // API to get dashboard data for doctor panel
-const doctorDashboard = async (req, res) => {
+const doctorDashboard = async (docId) => {
   try {
-    const { docId } = req.body;
-
-    const appointments = await appointmentModel.find({ docId });
+    const appointments = await getAppointmentsForDoctorService(docId);
 
     let earnings = 0;
 
@@ -183,10 +181,10 @@ const doctorDashboard = async (req, res) => {
       latestAppointments: appointments.reverse(),
     };
 
-    res.json({ success: true, dashData });
+    return dashData;
   } catch (error) {
     console.log(error);
-    res.json({ success: false, message: error.message });
+    throw error;
   }
 };
 

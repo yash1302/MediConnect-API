@@ -1,4 +1,5 @@
 import appointmentModel from "../models/appointmentModel.js";
+import doctorModel from "../models/doctorModel.js";
 
 const getAppointmentsForDoctorService = async (docId) => {
   try {
@@ -13,7 +14,7 @@ const getAppointmentsForDoctorService = async (docId) => {
   }
 };
 
-const updateDoctorAvailabilityService = async (docId,availability) => {
+const updateDoctorAvailabilityService = async (docId, availability) => {
   try {
     const doctor = await doctorModel.findByIdAndUpdate(docId, {
       available: availability,
@@ -25,7 +26,33 @@ const updateDoctorAvailabilityService = async (docId,availability) => {
   }
 };
 
+const completeAppointmentService = async (appointmentId) => {
+  try {
+    const result = await appointmentModel.findByIdAndUpdate(appointmentId, {
+      isCompleted: true,
+    });
+    return result;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
+const updateDoctorProfileService = async (docId, profileData) => {
+  try {
+    const result = await doctorModel.findByIdAndUpdate(docId, profileData, {
+      new: true,
+    });
+    return result;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
 export default {
   getAppointmentsForDoctorService,
-  updateDoctorAvailabilityService
+  updateDoctorAvailabilityService,
+  completeAppointmentService,
+  updateDoctorProfileService
 };

@@ -22,11 +22,12 @@ const {
   updatedMessage,
   resourceCreatedSucessfully,
   resourceCanceledSuccessfully,
+  resourceUpdatedSuccessfully,
 } = successMessages;
 
 export const doctorMessages = {
-  DOCTORPRESENT: new messageHandler(conflict, conflictMessage),
-  SIGNUPSUCCESS: new messageHandler(created, createdMessage),
+
+
   UNAUTHORIZED: new messageHandler(unauthorized, unauthorizedMessage),
   LOGINFAILURE: new messageHandler(notFound, notFoundMessage),
   DOCTORUPDATEDSUCCESS: new messageHandler(ok, updatedMessage),
@@ -43,5 +44,13 @@ export const doctorMessages = {
   APPOINTMENTCANCELLED: new messageHandler(
     ok,
     resourceCanceledSuccessfully("Appointment")
+  ),
+  APPOINTMENTCOMPLETED: new messageHandler(
+    ok,
+    resourceUpdatedSuccessfully("Appointment")
+  ),
+  AVAILABILITYCHANGEDSUCCESSFULLY: new messageHandler(
+    ok,
+    resourceUpdatedSuccessfully("Availability")
   ),
 };
