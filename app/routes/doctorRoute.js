@@ -53,7 +53,14 @@ doctorRouter.get(
     }
   }
 );
-doctorRouter.get("/list", authenticateJwtToken, doctorList);
+doctorRouter.get("/list", async (req, res, next) => {
+  try {
+    const result = await doctorList();
+    res.status(200).json(new responseHandler(result));
+  } catch (error) {
+    next(error);
+  }
+});
 
 doctorRouter.post(
   "/change-availability",
@@ -102,15 +109,24 @@ doctorRouter.get("/profile", authenticateJwtToken, async (req, res, next) => {
     next(error);
   }
 });
-doctorRouter.post("/update-profile", authenticateJwtToken, async(req,res,next)=>{
-  try {
-    const { userId } = res?.locals;
-    const { fees, address, available } = req.body;
-    const result = await updateDoctorProfile(userId, fees, address, available);
-    res.status(200).json(new responseHandler(result));
-  } catch (error) {
-    next(error);
+doctorRouter.post(
+  "/update-profile",
+  authenticateJwtToken,
+  async (req, res, next) => {
+    try {
+      const { userId } = res?.locals;
+      const { fees, address, available } = req.body;
+      const result = await updateDoctorProfile(
+        userId,
+        fees,
+        address,
+        available
+      );
+      res.status(200).json(new responseHandler(result));
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 export default doctorRouter;

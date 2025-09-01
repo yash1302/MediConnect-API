@@ -109,13 +109,13 @@ const appointmentComplete = async (docId, appointmentId) => {
 };
 
 // API to get all doctors list for Frontend
-const doctorList = async (req, res) => {
+const doctorList = async () => {
   try {
     const doctors = await doctorModel.find({}).select(["-password", "-email"]);
-    res.json({ success: true, doctors });
+    return doctors;
   } catch (error) {
     console.log(error);
-    res.json({ success: false, message: error.message });
+    throw error;
   }
 };
 
@@ -126,7 +126,7 @@ const changeAvailablity = async (docId) => {
     return AVAILABILITYCHANGEDSUCCESSFULLY;
   } catch (error) {
     console.log(error);
-    res.json({ success: false, message: error.message });
+    throw error;
   }
 };
 
