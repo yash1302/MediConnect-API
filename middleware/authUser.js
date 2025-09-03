@@ -13,6 +13,11 @@ const ENTERJWTTOKEN = new messageHandler(unauthorized, unauthenticatedJwtToken);
 const JWTINVALID = new messageHandler(unauthorized, jwtInvalid);
 
 export const authenticateJwtToken = async (req, res, next) => {
+  if (!req.headers["authorization"]) {
+    return res
+      .status(ENTERJWTTOKEN.statusCode)
+      .json(new responseHandler(null, ENTERJWTTOKEN));
+  }
   const token = req.headers["authorization"].split(" ")[1];
   if (!token) {
     res

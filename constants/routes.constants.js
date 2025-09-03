@@ -18,6 +18,9 @@ export const userRoutesConstants = {
   VERIFYRAZORPAY: "/verifyRazorpay",
   PAYMENTSTRIPE: "/payment-stripe",
   VERIFYSTRIPE: "/verifyStripe",
+  APPOINTMENTCOMPLETEDDOCTOR: "/appointment-completed-doctors",
+  GETROOMID: "/get-room-id/:receiverId",
+  GETROOMMESSAGES: "/get-room-messages/:receiverId",
 };
 
 export const doctorRoutesConstants = {

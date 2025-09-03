@@ -1,7 +1,7 @@
 import chatModel from "../models/chatModel.js";
 
 export const chatSocket = (io, socket) => {
-  socket.on("join", (userId) => {
+  socket.on("join_room", (userId) => {
     socket.userId = userId;
     socket.join(userId);
     console.log(`user ${userId} joined the chat`);
@@ -9,6 +9,7 @@ export const chatSocket = (io, socket) => {
 
   socket.on("private_message", async ({ senderId, receiverId, message }) => {
     try {
+      console.log(senderId, receiverId, message);
       const chat = new chatModel({ senderId, receiverId, message });
       await chat.save();
 

@@ -29,6 +29,8 @@ const {
   getAppointmentDetailsService,
   cancelAppointmentService,
   updateSlotsForDoctorService,
+  getDictinctDoctorsForUserService,
+  getRoomIdForUserService,
 } = userService;
 const { hashPassword, verifyPassword, generateJwtToken, uploadFromBuffer } =
   utils;
@@ -65,7 +67,6 @@ const registerUser = async (name, email, password) => {
 const loginUser = async (email, password) => {
   try {
     const user = await findUserService(email);
-    console.log(user._doc.length);
     if (user?._doc?._id) {
       const verfiedPassword = await verifyPassword(
         password,
@@ -332,6 +333,40 @@ const verifyStripe = async (req, res) => {
   }
 };
 
+const appointmentCompletedDoctorList = async (userId) => {
+  try {
+    const appointments = await getDictinctDoctorsForUserService(userId);
+
+    return appointments;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
+const getRoomId = async (userId, receiverId) => {
+  try {
+    const roomId = await getRoomIdForUserService(userId, receiverId);
+    return roomId;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
+const getMessagesForRoom = async (userId, receiverId) => {
+  try {
+    const messages = await userService.getMessagesForRoomService(
+      userId,
+      receiverId
+    );
+    return messages;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
 export {
   loginUser,
   registerUser,
@@ -344,4 +379,7 @@ export {
   verifyRazorpay,
   paymentStripe,
   verifyStripe,
+  appointmentCompletedDoctorList,
+  getRoomId,
+  getMessagesForRoom,
 };

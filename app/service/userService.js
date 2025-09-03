@@ -1,4 +1,5 @@
 import appointmentModel from "../models/appointmentModel.js";
+import chatModel from "../models/chatModel.js";
 import doctorModel from "../models/doctorModel.js";
 import userModel from "../models/userModel.js";
 
@@ -94,6 +95,65 @@ const updateSlotsForDoctorService = async (docId, slots_booked) => {
   }
 };
 
+const getDictinctDoctorsForUserService = async (userId) => {
+  try {
+    const doctors = await appointmentModel.aggregate([
+      { $match: { userId: userId } },
+      { $sort: { date: -1 } },
+      {
+        $group: {
+          _id: "$docId",
+          latestAppointment: { $first: "$$ROOT" },
+        },
+      },
+      { $replaceRoot: { newRoot: "$latestAppointment" } },
+    ]);
+    return doctors;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
+const getRoomIdForUserService = async (userId, receiverId) => {
+  try {
+    const room = await chatModel.findOne({
+      $or: [
+        { senderId: userId, receiverId: receiverId },
+        { senderId: receiverId, receiverId: userId },
+      ],
+    });
+    if (!room) {
+      room = new chatModel({
+        senderId: userId,
+        receiverId: receiverId,
+        message: "",
+      });
+      await room.save();
+    }
+
+    return room;
+  } catch (error) {
+    throw error;
+  }
+};
+
+const getMessagesForRoomService = async (userId, receiverId) => {
+  try {
+    const messages = await chatModel
+      .find({
+        $or: [
+          { senderId: userId, receiverId: receiverId },
+          { senderId: receiverId, receiverId: userId },
+        ],
+      })
+      .sort({ createdAt: 1 });
+    return messages;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export default {
   signupUserService,
   findUserService,
@@ -103,5 +163,8 @@ export default {
   getAppointmentsForUserService,
   getAppointmentDetailsService,
   cancelAppointmentService,
-  updateSlotsForDoctorService
+  updateSlotsForDoctorService,
+  getDictinctDoctorsForUserService,
+  getRoomIdForUserService,
+  getMessagesForRoomService,
 };
