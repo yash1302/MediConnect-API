@@ -23,7 +23,7 @@
 
       function joinChat() {
         const userId = document.getElementById("userId").value;
-        socket.emit("join", userId);
+        socket.emit("join_room", userId);
       }
 
       function sendMessage() {

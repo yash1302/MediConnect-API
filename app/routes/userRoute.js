@@ -11,6 +11,9 @@ import {
   verifyRazorpay,
   paymentStripe,
   verifyStripe,
+  appointmentCompletedDoctorList,
+  getRoomId,
+  getMessagesForRoom,
 } from "../controllers/userController.js";
 import upload from "../../middleware/multer.js";
 import { authenticateJwtToken } from "../../middleware/authUser.js";
@@ -30,6 +33,9 @@ const {
   VERIFYRAZORPAY,
   PAYMENTSTRIPE,
   VERIFYSTRIPE,
+  APPOINTMENTCOMPLETEDDOCTOR,
+  GETROOMID,
+  GETROOMMESSAGES,
 } = userRoutesConstants;
 
 userRouter.post(REGISTER, async (req, res, next) => {
@@ -122,7 +128,6 @@ userRouter.post(
   }
 );
 
-
 userRouter.post(
   PAYMENTRAZORPAY,
   authenticateJwtToken,
@@ -168,5 +173,45 @@ userRouter.post(VERIFYSTRIPE, authenticateJwtToken, async (req, res, next) => {
     next(error);
   }
 });
+
+userRouter.get(
+  APPOINTMENTCOMPLETEDDOCTOR,
+  authenticateJwtToken,
+  async (req, res, next) => {
+    try {
+      const { userId } = res?.locals;
+      const result = await appointmentCompletedDoctorList(userId);
+      res.status(200).json(new responseHandler(result));
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+userRouter.get(GETROOMID, authenticateJwtToken, async (req, res, next) => {
+  try {
+    const { userId } = res?.locals;
+    const { receiverId } = req?.params;
+    const result = await getRoomId(userId, receiverId);
+    res.status(200).json(new responseHandler(result));
+  } catch (error) {
+    next(error);
+  }
+});
+
+userRouter.get(
+  GETROOMMESSAGES,
+  authenticateJwtToken,
+  async (req, res, next) => {
+    try {
+      const { userId } = res?.locals;
+      const { receiverId } = req?.params;
+      const result = await getMessagesForRoom(userId, receiverId);
+      res.status(200).json(new responseHandler(result));
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 export default userRouter;

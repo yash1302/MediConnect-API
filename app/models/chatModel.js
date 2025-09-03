@@ -4,7 +4,6 @@ const chatSchema = new mongoose.Schema({
   senderId: { type: String, required: true },
   receiverId: { type: String, required: true },
   message: { type: String, required: true },
-  date: { type: Number, required: true },
 });
 
 const chatModel = mongoose.models.chat || mongoose.model("chat", chatSchema);
