@@ -10,7 +10,6 @@ import {
 import { changeAvailablity } from "../controllers/doctorController.js";
 import authAdmin from "../../middleware/authAdmin.js";
 import upload from "../../middleware/multer.js";
-import { authenticateJwtToken } from "../../middleware/authUser.js";
 import { responseHandler } from "../../common/MessageHandler.js";
 const adminRouter = express.Router();
 
@@ -26,7 +25,7 @@ adminRouter.post("/login", async (req, res, next) => {
 
 adminRouter.post(
   "/add-doctor",
-  authenticateJwtToken,
+  authAdmin,
   upload.single("image"),
   async (req, res, next) => {
     try {
@@ -40,7 +39,7 @@ adminRouter.post(
 
 adminRouter.get(
   "/appointments",
-  authenticateJwtToken,
+  authAdmin,
   async (req, res, next) => {
     try {
       const result = await appointmentsAdmin();
@@ -53,7 +52,7 @@ adminRouter.get(
 
 adminRouter.post(
   "/cancel-appointment",
-  authenticateJwtToken,
+  authAdmin,
   async (req, res, next) => {
     try {
       const { appointmentId } = req.body;
@@ -67,7 +66,7 @@ adminRouter.post(
 
 adminRouter.get(
   "/all-doctors",
-  authenticateJwtToken,
+  authAdmin,
   async (req, res, next) => {
     try {
       const result = await allDoctors();
@@ -80,7 +79,7 @@ adminRouter.get(
 
 adminRouter.post(
   "/change-availability",
-  authenticateJwtToken,
+  authAdmin,
   async (req, res, next) => {
     try {
       const { docId } = req.body;
@@ -92,7 +91,7 @@ adminRouter.post(
   }
 );
 
-adminRouter.get("/dashboard", authenticateJwtToken, async (req, res, next) => {
+adminRouter.get("/dashboard", authAdmin, async (req, res, next) => {
   try {
     const result = await adminDashboard(req, res);
     res.status(result.statusCode || 200).json(new responseHandler(result));
