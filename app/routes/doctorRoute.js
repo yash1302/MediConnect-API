@@ -11,7 +11,6 @@ import {
   updateDoctorProfile,
 } from "../controllers/doctorController.js";
 import authDoctor from "../../middleware/authDoctor.js";
-import { authenticateJwtToken } from "../../middleware/authUser.js";
 import { responseHandler } from "../../common/MessageHandler.js";
 const doctorRouter = express.Router();
 
@@ -27,7 +26,7 @@ doctorRouter.post("/login", async (req, res, next) => {
 
 doctorRouter.post(
   "/cancel-appointment",
-  authenticateJwtToken,
+  authDoctor,
   async (req, res, next) => {
     try {
       const { appointmentId } = req.body;
@@ -42,7 +41,7 @@ doctorRouter.post(
 
 doctorRouter.get(
   "/appointments",
-  authenticateJwtToken,
+  authDoctor,
   async (req, res, next) => {
     try {
       const { userId } = res?.locals;
@@ -64,7 +63,7 @@ doctorRouter.get("/list", async (req, res, next) => {
 
 doctorRouter.post(
   "/change-availability",
-  authenticateJwtToken,
+  authDoctor,
   async (req, res, next) => {
     try {
       const { userId } = res?.locals;
@@ -77,7 +76,7 @@ doctorRouter.post(
 );
 doctorRouter.post(
   "/complete-appointment",
-  authenticateJwtToken,
+  authDoctor,
   async (req, res, next) => {
     try {
       const { appointmentId } = req.body;
@@ -90,7 +89,7 @@ doctorRouter.post(
   }
 );
 
-doctorRouter.get("/dashboard", authenticateJwtToken, async (req, res, next) => {
+doctorRouter.get("/dashboard", authDoctor, async (req, res, next) => {
   try {
     const { userId } = res?.locals;
     const result = await doctorDashboard(userId);
@@ -100,7 +99,7 @@ doctorRouter.get("/dashboard", authenticateJwtToken, async (req, res, next) => {
   }
 });
 
-doctorRouter.get("/profile", authenticateJwtToken, async (req, res, next) => {
+doctorRouter.get("/profile", authDoctor, async (req, res, next) => {
   try {
     const { userId } = res?.locals;
     const result = await doctorProfile(userId);
@@ -111,7 +110,7 @@ doctorRouter.get("/profile", authenticateJwtToken, async (req, res, next) => {
 });
 doctorRouter.post(
   "/update-profile",
-  authenticateJwtToken,
+  authDoctor,
   async (req, res, next) => {
     try {
       const { userId } = res?.locals;
