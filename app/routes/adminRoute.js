@@ -11,9 +11,23 @@ import { changeAvailablity } from "../controllers/doctorController.js";
 import authAdmin from "../../middleware/authAdmin.js";
 import upload from "../../middleware/multer.js";
 import { responseHandler } from "../../common/MessageHandler.js";
+import { authenticateJwtToken } from "../../middleware/authUser.js";
+import { authorizeRole } from "../../middleware/authorizeRole.js";
+import { KEYWORDS } from "../../constants/keywords.constants.js";
+import { adminRoutesConstants } from "../../constants/routes.constants.js";
+const { ADMIN } = KEYWORDS;
 const adminRouter = express.Router();
+const {
+  LOGIN,
+  ADDDOCTOR,
+  APPOINTMENTS,
+  CANCELAPPOINTMENT,
+  ALLDOCTORLIST,
+  CHANGEAVAILABILITY,
+  DASHBOARD,
+} = adminRoutesConstants;
 
-adminRouter.post("/login", async (req, res, next) => {
+adminRouter.post(LOGIN, async (req, res, next) => {
   try {
     const { email, password } = req?.body;
     const result = await loginAdmin(email, password);
@@ -24,8 +38,9 @@ adminRouter.post("/login", async (req, res, next) => {
 });
 
 adminRouter.post(
-  "/add-doctor",
-  authAdmin,
+  ADDDOCTOR,
+  authenticateJwtToken,
+  authorizeRole(ADMIN),
   upload.single("image"),
   async (req, res, next) => {
     try {
@@ -38,8 +53,9 @@ adminRouter.post(
 );
 
 adminRouter.get(
-  "/appointments",
-  authAdmin,
+  APPOINTMENTS,
+  authenticateJwtToken,
+  authorizeRole(ADMIN),
   async (req, res, next) => {
     try {
       const result = await appointmentsAdmin();
@@ -51,8 +67,9 @@ adminRouter.get(
 );
 
 adminRouter.post(
-  "/cancel-appointment",
-  authAdmin,
+  CANCELAPPOINTMENT,
+  authenticateJwtToken,
+  authorizeRole(ADMIN),
   async (req, res, next) => {
     try {
       const { appointmentId } = req.body;
@@ -65,8 +82,9 @@ adminRouter.post(
 );
 
 adminRouter.get(
-  "/all-doctors",
-  authAdmin,
+  ALLDOCTORLIST,
+  authenticateJwtToken,
+  authorizeRole(ADMIN),
   async (req, res, next) => {
     try {
       const result = await allDoctors();
@@ -78,8 +96,9 @@ adminRouter.get(
 );
 
 adminRouter.post(
-  "/change-availability",
-  authAdmin,
+  CHANGEAVAILABILITY,
+  authenticateJwtToken,
+  authorizeRole(ADMIN),
   async (req, res, next) => {
     try {
       const { docId } = req.body;
@@ -91,13 +110,18 @@ adminRouter.post(
   }
 );
 
-adminRouter.get("/dashboard", authAdmin, async (req, res, next) => {
-  try {
-    const result = await adminDashboard(req, res);
-    res.status(result.statusCode || 200).json(new responseHandler(result));
-  } catch (error) {
-    next(error);
+adminRouter.get(
+  DASHBOARD,
+  authenticateJwtToken,
+  authorizeRole(ADMIN),
+  async (req, res, next) => {
+    try {
+      const result = await adminDashboard(req, res);
+      res.status(result.statusCode || 200).json(new responseHandler(result));
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 export default adminRouter;

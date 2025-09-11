@@ -5,8 +5,7 @@ const getAppointmentsForDoctorService = async (docId) => {
   try {
     const appointments = await appointmentModel
       .find({ docId })
-      .where("cancelled")
-      .ne(true);
+
     return appointments;
   } catch (error) {
     console.error(error);

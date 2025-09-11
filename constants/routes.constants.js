@@ -33,6 +33,7 @@ export const doctorRoutesConstants = {
   DASHBOARD: "/dashboard",
   PROFILE: "/profile",
   UPDATEPROFILE: "/update-profile",
+  GETPATIENTSFORDOCTOR: "/patients",
 };
 
 export const adminRoutesConstants = {

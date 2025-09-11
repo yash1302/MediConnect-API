@@ -9,12 +9,32 @@ import {
   doctorDashboard,
   doctorProfile,
   updateDoctorProfile,
+  getPatientsForDoctor,
 } from "../controllers/doctorController.js";
-import authDoctor from "../../middleware/authDoctor.js";
 import { responseHandler } from "../../common/MessageHandler.js";
+import { authenticateJwtToken } from "../../middleware/authUser.js";
+import { authorizeRole } from "../../middleware/authorizeRole.js";
+import { doctorRoutesConstants } from "../../constants/routes.constants.js";
+import { KEYWORDS } from "../../constants/keywords.constants.js";
+
 const doctorRouter = express.Router();
 
-doctorRouter.post("/login", async (req, res, next) => {
+const {
+  LOGIN,
+  CANCELAPPOINTMENT,
+  APPOINTMENTS,
+  DOCTORLIST,
+  CHANGEAVAILABILITY,
+  COMPLETEAPPOINTMENT,
+  DASHBOARD,
+  PROFILE,
+  UPDATEPROFILE,
+  GETPATIENTSFORDOCTOR,
+} = doctorRoutesConstants;
+
+const { DOCTOR } = KEYWORDS;
+
+doctorRouter.post(LOGIN, async (req, res, next) => {
   try {
     const { email, password } = req.body;
     const result = await loginDoctor(email, password);
@@ -25,8 +45,9 @@ doctorRouter.post("/login", async (req, res, next) => {
 });
 
 doctorRouter.post(
-  "/cancel-appointment",
-  authDoctor,
+  CANCELAPPOINTMENT,
+  authenticateJwtToken,
+  authorizeRole(DOCTOR),
   async (req, res, next) => {
     try {
       const { appointmentId } = req.body;
@@ -40,8 +61,9 @@ doctorRouter.post(
 );
 
 doctorRouter.get(
-  "/appointments",
-  authDoctor,
+  APPOINTMENTS,
+  authenticateJwtToken,
+  authorizeRole(DOCTOR),
   async (req, res, next) => {
     try {
       const { userId } = res?.locals;
@@ -52,7 +74,8 @@ doctorRouter.get(
     }
   }
 );
-doctorRouter.get("/list", async (req, res, next) => {
+
+doctorRouter.get(DOCTORLIST, async (req, res, next) => {
   try {
     const result = await doctorList();
     res.status(200).json(new responseHandler(result));
@@ -62,8 +85,9 @@ doctorRouter.get("/list", async (req, res, next) => {
 });
 
 doctorRouter.post(
-  "/change-availability",
-  authDoctor,
+  CHANGEAVAILABILITY,
+  authenticateJwtToken,
+  authorizeRole(DOCTOR),
   async (req, res, next) => {
     try {
       const { userId } = res?.locals;
@@ -74,9 +98,11 @@ doctorRouter.post(
     }
   }
 );
+
 doctorRouter.post(
-  "/complete-appointment",
-  authDoctor,
+  COMPLETEAPPOINTMENT,
+  authenticateJwtToken,
+  authorizeRole(DOCTOR),
   async (req, res, next) => {
     try {
       const { appointmentId } = req.body;
@@ -89,38 +115,66 @@ doctorRouter.post(
   }
 );
 
-doctorRouter.get("/dashboard", authDoctor, async (req, res, next) => {
-  try {
-    const { userId } = res?.locals;
-    const result = await doctorDashboard(userId);
-    res.status(200).json(new responseHandler(result));
-  } catch (error) {
-    next(error);
-  }
-});
-
-doctorRouter.get("/profile", authDoctor, async (req, res, next) => {
-  try {
-    const { userId } = res?.locals;
-    const result = await doctorProfile(userId);
-    res.status(200).json(new responseHandler(result));
-  } catch (error) {
-    next(error);
-  }
-});
-doctorRouter.post(
-  "/update-profile",
-  authDoctor,
+doctorRouter.get(
+  DASHBOARD,
+  authenticateJwtToken,
+  authorizeRole(DOCTOR),
   async (req, res, next) => {
     try {
       const { userId } = res?.locals;
-      const { fees, address, available } = req.body;
+      const result = await doctorDashboard(userId);
+      res.status(200).json(new responseHandler(result));
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+doctorRouter.get(
+  PROFILE,
+  authenticateJwtToken,
+  authorizeRole(DOCTOR),
+  async (req, res, next) => {
+    try {
+      const { userId } = res?.locals;
+      const result = await doctorProfile(userId);
+      res.status(200).json(new responseHandler(result));
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+doctorRouter.post(
+  UPDATEPROFILE,
+  authenticateJwtToken,
+  authorizeRole(DOCTOR),
+  async (req, res, next) => {
+    try {
+      const { userId } = res?.locals;
+      const { fees, address, available, about } = req.body;
       const result = await updateDoctorProfile(
         userId,
         fees,
         address,
-        available
+        available,
+        about
       );
+      res.status(200).json(new responseHandler(result));
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+doctorRouter.get(
+  GETPATIENTSFORDOCTOR,
+  authenticateJwtToken,
+  authorizeRole(DOCTOR),
+  async (req, res, next) => {
+    try {
+      const { userId: doctorId } = res?.locals;
+      const result = await getPatientsForDoctor(doctorId);
       res.status(200).json(new responseHandler(result));
     } catch (error) {
       next(error);

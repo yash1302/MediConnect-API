@@ -19,7 +19,10 @@ import upload from "../../middleware/multer.js";
 import { authenticateJwtToken } from "../../middleware/authUser.js";
 import { userRoutesConstants } from "../../constants/routes.constants.js";
 import { responseHandler } from "../../common/MessageHandler.js";
+import { authorizeRole } from "../../middleware/authorizeRole.js";
+import { KEYWORDS } from "../../constants/keywords.constants.js";
 const userRouter = express.Router();
+const {USER} = KEYWORDS
 
 const {
   LOGIN,
@@ -58,20 +61,26 @@ userRouter.post(LOGIN, async (req, res, next) => {
   }
 });
 
-userRouter.get(GETPROFILE, authenticateJwtToken, async (req, res, next) => {
-  try {
-    const { userId } = res?.locals;
-    const user = await getProfile(userId);
-    res.status(200).json(new responseHandler(user));
-  } catch (error) {
-    next(error);
+userRouter.get(
+  GETPROFILE,
+  authenticateJwtToken,
+  authorizeRole(USER),
+  async (req, res, next) => {
+    try {
+      const { userId } = res?.locals;
+      const user = await getProfile(userId);
+      res.status(200).json(new responseHandler(user));
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 userRouter.post(
   UPDATEPROFILE,
   upload.single("image"),
   authenticateJwtToken,
+  authorizeRole(USER),
   async (req, res, next) => {
     try {
       const { userId } = res?.locals;
@@ -86,6 +95,7 @@ userRouter.post(
 userRouter.post(
   BOOKAPPOINTMENT,
   authenticateJwtToken,
+  authorizeRole(USER),
   async (req, res, next) => {
     try {
       const { docId, slotDate, slotTime } = req.body;
@@ -103,19 +113,25 @@ userRouter.post(
   }
 );
 
-userRouter.get(APPOINTMENTS, authenticateJwtToken, async (req, res, next) => {
-  try {
-    const { userId } = res?.locals;
-    const appointments = await listAppointment(userId);
-    res.status(200).json(new responseHandler(appointments));
-  } catch (error) {
-    next(error);
+userRouter.get(
+  APPOINTMENTS,
+  authenticateJwtToken,
+  authorizeRole(USER),
+  async (req, res, next) => {
+    try {
+      const { userId } = res?.locals;
+      const appointments = await listAppointment(userId);
+      res.status(200).json(new responseHandler(appointments));
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 userRouter.post(
   CANCELAPPOINTMENT,
   authenticateJwtToken,
+  authorizeRole(USER),
   async (req, res, next) => {
     try {
       const { appointmentId } = req.body;
@@ -131,6 +147,7 @@ userRouter.post(
 userRouter.post(
   PAYMENTRAZORPAY,
   authenticateJwtToken,
+  authorizeRole(USER),
   async (req, res, next) => {
     try {
       const { appointmentId } = req.body;
@@ -144,6 +161,7 @@ userRouter.post(
 userRouter.post(
   VERIFYRAZORPAY,
   authenticateJwtToken,
+  authorizeRole(USER),
   async (req, res, next) => {
     try {
       const { razorpay_order_id } = req.body;
@@ -154,29 +172,40 @@ userRouter.post(
     }
   }
 );
-userRouter.post(PAYMENTSTRIPE, authenticateJwtToken, async (req, res, next) => {
-  try {
-    const { appointmentId } = req.body;
-    const { origin } = req.headers;
-    const result = await paymentStripe(appointmentId, origin);
-    res.status(200).json(new responseHandler(result));
-  } catch (error) {
-    next(error);
+userRouter.post(
+  PAYMENTSTRIPE,
+  authenticateJwtToken,
+  authorizeRole(USER),
+  async (req, res, next) => {
+    try {
+      const { appointmentId } = req.body;
+      const { origin } = req.headers;
+      const result = await paymentStripe(appointmentId, origin);
+      res.status(200).json(new responseHandler(result));
+    } catch (error) {
+      next(error);
+    }
   }
-});
-userRouter.post(VERIFYSTRIPE, authenticateJwtToken, async (req, res, next) => {
-  try {
-    const { appointmentId, success } = req.body;
-    const result = await verifyStripe(appointmentId, success);
-    res.status(200).json(new responseHandler(result));
-  } catch (error) {
-    next(error);
+);
+userRouter.post(
+  VERIFYSTRIPE,
+  authenticateJwtToken,
+  authorizeRole(USER),
+  async (req, res, next) => {
+    try {
+      const { appointmentId, success } = req.body;
+      const result = await verifyStripe(appointmentId, success);
+      res.status(200).json(new responseHandler(result));
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 userRouter.get(
   APPOINTMENTCOMPLETEDDOCTOR,
   authenticateJwtToken,
+  authorizeRole(USER),
   async (req, res, next) => {
     try {
       const { userId } = res?.locals;
@@ -188,16 +217,20 @@ userRouter.get(
   }
 );
 
-userRouter.get(GETROOMID, authenticateJwtToken, async (req, res, next) => {
-  try {
-    const { userId } = res?.locals;
-    const { receiverId } = req?.params;
-    const result = await getRoomId(userId, receiverId);
-    res.status(200).json(new responseHandler(result));
-  } catch (error) {
-    next(error);
+userRouter.get(
+  GETROOMID,
+  authenticateJwtToken,
+  async (req, res, next) => {
+    try {
+      const { userId } = res?.locals;
+      const { receiverId } = req?.params;
+      const result = await getRoomId(userId, receiverId);
+      res.status(200).json(new responseHandler(result));
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 userRouter.get(
   GETROOMMESSAGES,

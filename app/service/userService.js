@@ -1,5 +1,6 @@
 import appointmentModel from "../models/appointmentModel.js";
 import chatModel from "../models/chatModel.js";
+import chatRoomModel from "../models/chatRoomModel.js";
 import doctorModel from "../models/doctorModel.js";
 import userModel from "../models/userModel.js";
 
@@ -115,19 +116,14 @@ const getDictinctDoctorsForUserService = async (userId) => {
   }
 };
 
-const getRoomIdForUserService = async (userId, receiverId) => {
+const getRoomIdForUserService = async (senderId, receiverId) => {
   try {
-    const room = await chatModel.findOne({
-      $or: [
-        { senderId: userId, receiverId: receiverId },
-        { senderId: receiverId, receiverId: userId },
-      ],
+    let room = await chatRoomModel.findOne({
+      participants: { $all: [senderId, receiverId], $size: 2 },
     });
     if (!room) {
-      room = new chatModel({
-        senderId: userId,
-        receiverId: receiverId,
-        message: "",
+      room = await chatRoomModel.create({
+        participants: [senderId, receiverId],
       });
       await room.save();
     }

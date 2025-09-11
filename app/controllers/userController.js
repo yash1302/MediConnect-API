@@ -6,6 +6,8 @@ import razorpay from "razorpay";
 import { userMessages } from "../messages/userMessages.js";
 import utils from "../../common/utils.js";
 import userService from "../service/userService.js";
+import adminService from "../service/adminService.js";
+
 
 const {
   USERPRESENT,
@@ -32,6 +34,9 @@ const {
   getDictinctDoctorsForUserService,
   getRoomIdForUserService,
 } = userService;
+
+const {getAllDoctorsService} = adminService
+
 const { hashPassword, verifyPassword, generateJwtToken, uploadFromBuffer } =
   utils;
 
