@@ -1,29 +1,30 @@
-import express from "express"
-import cors from 'cors'
-import 'dotenv/config'
-import connectDB from "./config/mongodb.js"
-import connectCloudinary from "./config/cloudinary.js"
-import userRouter from "./routes/userRoute.js"
-import doctorRouter from "./routes/doctorRoute.js"
-import adminRouter from "./routes/adminRoute.js"
+import app from "./app/app.js";
+import http from "http";
+import { Server } from "socket.io";
 
-// app config
-const app = express()
-const port = process.env.PORT || 4000
-connectDB()
-connectCloudinary()
+import path from "path";
+import { chatSocket } from "./app/sockets/chatSocket.js";
 
-// middlewares
-app.use(express.json())
-app.use(cors())
+const port = process.env.PORT || 4000;
 
-// api endpoints
-app.use("/api/user", userRouter)
-app.use("/api/admin", adminRouter)
-app.use("/api/doctor", doctorRouter)
+const server = http.createServer(app);
 
-app.get("/", (req, res) => {
-  res.send("API Working")
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+  },
 });
 
-app.listen(port, () => console.log(`Server started on PORT:${port}`))
+app.get('/',(req,res)=>{
+  res.sendFile(path.resolve('./app/public/index.html'))
+})
+
+io.on("connection", (socket) => {
+  console.log("room", socket.rooms);
+  console.log("user connected", socket.id);
+  chatSocket(io, socket);
+});
+
+server.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});
