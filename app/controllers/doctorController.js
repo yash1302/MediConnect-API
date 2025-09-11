@@ -23,6 +23,7 @@ const {
   getAppointmentDetailsService,
   cancelAppointmentService,
   updateSlotsForDoctorService,
+  getUserDataService,
 } = userService;
 const {
   getAppointmentsForDoctorService,
@@ -47,7 +48,7 @@ const loginDoctor = async (email, password) => {
         userId: user._id,
         email: user.email,
         name: user.name,
-        isDoctor: user.role,
+        role: user.role,
       };
       const token = await generateJwtToken(tokenData);
       return token;
@@ -142,9 +143,9 @@ const doctorProfile = async (docId) => {
 };
 
 // API to update doctor profile data from  Doctor Panel
-const updateDoctorProfile = async (docId, fees, address, available) => {
+const updateDoctorProfile = async (docId, fees, address, available, about) => {
   try {
-    const profileData = { fees, address, available };
+    const profileData = { fees, address, available, about };
     await updateDoctorProfileService(docId, profileData);
     return DOCTORUPDATEDSUCCESS;
   } catch (error) {
@@ -188,6 +189,29 @@ const doctorDashboard = async (docId) => {
   }
 };
 
+const getPatientsForDoctor = async (doctorId) => {
+  try {
+    const appointments = await getAppointmentsForDoctorService(doctorId);
+    let patients = [];
+    appointments.map((item) => {
+      if (!patients.includes(item.userId)) {
+        patients.push(item.userId);
+      }
+    });
+
+    patients = await Promise.all(
+      patients.map(async (patientId) => {
+        const patient = await getUserDataService(patientId);
+        return patient;
+      })
+    );
+    return patients;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
 export {
   loginDoctor,
   appointmentsDoctor,
@@ -198,4 +222,5 @@ export {
   doctorDashboard,
   doctorProfile,
   updateDoctorProfile,
+  getPatientsForDoctor,
 };
