@@ -3,6 +3,7 @@ import cors from "cors";
 import bodyParser from "body-parser";
 import { cloudinary, mongoConnection } from "./connection.js";
 import {
+  DBSTATUSAPI,
   HEALTHCHECKAPI,
   routesConstants,
 } from "../constants/routes.constants.js";
@@ -32,6 +33,15 @@ routes.forEach(({ path, router }) => {
 
 app.get(HEALTHCHECKAPI, (req, res) => {
   res.status(200).json({ message: "API is working fine" });
+});
+
+app.use(DBSTATUSAPI, async (req, res) => {
+  try {
+    await mongoConnection();
+    res.status(200).json({ message: "DB is working fine" });
+  } catch (error) {
+    res.status(500).json({ message: "DB is not working fine" });
+  }
 });
 
 app.use((error, req, res, next) => {

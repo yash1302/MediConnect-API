@@ -6,6 +6,8 @@ export const routesConstants = {
 
 export const HEALTHCHECKAPI = "/api/health-check";
 
+export const DBSTATUSAPI = "/api/db-status";
+
 export const userRoutesConstants = {
   LOGIN: "/login",
   REGISTER: "/register",
