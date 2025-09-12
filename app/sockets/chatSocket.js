@@ -10,6 +10,7 @@ export const chatSocket = (io, socket) => {
     "private_message",
     async ({ senderId, receiverId, message, roomId }) => {
       try {
+        console.log(senderId, receiverId, message, roomId, "chat data");
         const chat = new chatModel({ senderId, receiverId, message, roomId });
         await chat.save();
 
