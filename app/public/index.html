@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <h1>socket</h1>
+    <input id="userId" placeholder="Your User ID" />
+    <button onclick="joinChat()">Join</button>
+
+    <input id="receiverId" placeholder="Receiver ID" />
+    <input id="message" placeholder="Type a message" />
+    <button onclick="sendMessage()">Send</button>
+
+    <h3>Messages</h3>
+    <ul id="messages"></ul>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+
+      function joinChat() {
+        const userId = document.getElementById("userId").value;
+        socket.emit("join_room", userId);
+      }
+
+      function sendMessage() {
+        const senderId = document.getElementById("userId").value;
+        const receiverId = document.getElementById("receiverId").value;
+        const message = document.getElementById("message").value;
+
+        socket.emit("private_message", { senderId, receiverId, message });
+        document.getElementById("message").value = ""; // clear input
+      }
+
+      socket.on("private_message", (data) => {
+        const li = document.createElement("li");
+        li.textContent = `${data.senderId}: ${data.message}`;
+        document.getElementById("messages").appendChild(li);
+      });
+    </script>
+  </body>
+</html>
