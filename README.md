@@ -91,4 +91,4 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## Contact
 
-For questions or feedback, reach out to the project maintainer at [Lord-Vesta](https://github.com/yash1302/).
+For questions or feedback, reach out to the project maintainer at [yash1302](https://github.com/yash1302/).
